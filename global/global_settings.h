@@ -1,0 +1,54 @@
+#ifndef GLOBAL_SETTINGS_H
+#define GLOBAL_SETTINGS_H
+
+#include "DenKr_essentials/global_settings_values.h"
+
+
+
+
+
+//#define PROGRAM_NAME_VAR_AVAILABILITY PROGRAM_NAME_VAR_AVAILABILITY___SINGLE
+#define PROGRAM_NAME_VAR_AVAILABILITY                 PROGRAM_NAME_VAR_AVAILABILITY___GLOBAL
+//---------------------------------------------------------------------------------------
+//#define PROGRAM_PATH_VAR_AVAILABILITY PROGRAM_PATH_VAR_AVAILABILITY___SINGLE
+#define PROGRAM_PATH_VAR_AVAILABILITY                 PROGRAM_PATH_VAR_AVAILABILITY___GLOBAL
+//---------------------------------------------------------------------------------------
+//#define STORAGE_FILES_PATH_VAR_AVAILABILITY STORAGE_FILES_PATH_VAR_AVAILABILITY___SINGLE
+#define STORAGE_FILES_PATH_VAR_AVAILABILITY           STORAGE_FILES_PATH_VAR_AVAILABILITY___GLOBAL
+#define STORAGE_FILES_PATH_LOCATION STORAGE_FILES_PATH_LOCATION___LOCAL_ALL_USERS
+#define STORAGE_FILES_PATH_ABSOLUTE_MANUAL_PATH "/home/denkr/Downloads"
+//---------------------------------------------------------------------------------------
+
+
+
+//#define PROGRAM_ARGUMENTS_GLOBAL_AVAILABILITY PROGRAM_ARGUMENTS_GLOBAL_AVAILABILITY___NOT_AVAILABLE
+#define PROGRAM_ARGUMENTS_GLOBAL_AVAILABILITY PROGRAM_ARGUMENTS_GLOBAL_AVAILABILITY___AVAILABLE
+
+
+
+
+//#define DENKR_ESSENTIALS__DL_LIBS__MAIN_APP
+//#define DENKR_ESSENTIALS__DL_LIBS__PLUGIN_PREDEFINED
+#define DENKR_ESSENTIALS__DL_LIBS__PLUGIN_GENERIC
+
+
+
+//#define RELEASE_VERSION
+
+
+#ifndef RELEASE_VERSION
+	#define DEVELOPMENT_MODE
+
+
+	#define DEBUG
+
+//	#define DEBUG_WIFI_SNIFF
+#endif
+
+
+
+
+
+
+
+#endif /* GLOBAL_SETTINGS_H */
