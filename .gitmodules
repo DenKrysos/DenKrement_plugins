@@ -1,0 +1,3 @@
+[submodule "DenKr_essentials"]
+	path = DenKr_essentials
+	url = https://github.com/DenKrysos/DenKr_essentials.git
