@@ -155,11 +155,12 @@ void* CAT(hook_role_thread_,C_PREF)(void* arg)
 int CAT(DENKR_PLUGIN_DISC_INIT_FUNC_PREFIX,C_PREF)(PluginManager *plugman)
 {
 //	int err;
+	int roletype=DenKr_plugin_role__generic;
 	char role[]="template_test";
 
-	PluginManager_register_role_generic(plugman, role, strlen(role)+1, DenKr_plugin_working_type__thread, NULL, DenKr_plugin_interComm_method__infBroker, CAT(hook_role_thread_,C_PREF));
+	PluginManager_register_role_generic(plugman, roletype, role, strlen(role)+1, DenKr_plugin_working_type__thread, NULL, DenKr_plugin_interComm_method__infBroker, CAT(hook_role_thread_,C_PREF));
 
-	return DenKr_plugin_role__generic;
+	return 0;//return DenKr_plugin_role__generic;//This return isn't really used anymore. This is intrinsically done by registration-function
 }
 
 

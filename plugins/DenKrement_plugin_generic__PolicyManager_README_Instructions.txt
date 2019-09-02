@@ -14,6 +14,6 @@ This Plugin provides the opportunity to Enable/Disable Debug-Terminal-Print-Mode
 
 
 
-Currently "Stability" of the Plugin:
+Current "Stability" of the Plugin:
 - It adjusts itself to the Total Number of existing Physical Links and also the ARs coming from the Dashbaord
 	-> But only during Initialization Phase. If these "Total Numbers" change during runtime, it does not adjust itself to the new number.

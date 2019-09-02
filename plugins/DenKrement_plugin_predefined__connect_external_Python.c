@@ -193,6 +193,7 @@ static int CAT(C_PREF,_send_msg_to_Py)(int sock_Py, struct DenKr_InfBroker_Msg_H
 //   Otherwise the Broker trys to call the nested Functions (which then do not exist...)
 //   and everything breaks down to Hell...
 //  -> Some kind of own tracking about which contextes are registered and then finally clear them.
+//TODO: Have a closer look, whether the memspace behind the passed socket has to be freed (becomes malloced inside "DenKr_Thread_startThread_generic" in DenKr_essentials "multi_threading.c"
 //
 //For this purpose here just use the exact same Messages / Message-Format as for the Context-Broker
 static void* CAT(C_PREF,_connect_translate__Thread)(void* arg)
@@ -478,17 +479,18 @@ void* CAT(hook_role_thread_,C_PREF)(void* arg)
     //==================================================================================================//
     //----  Initialization  ----------------------------------------------------------------------------//
     //==================================================================================================//
-//	DenKr_generic_module_thread__startPreamble
-//	int err;
+		//	int testdummy = ((struct addArgs__Context_Broker__External_Connector_Python*)(((struct thread_predefined_module_start_ThreadArgPassing*)arg)->additional))->test_dummy;
+		//	depr(1,"testdummy: %d",testdummy)
+	DenKr_predefined_module_thread__startPreamble_noPrint
 	//----------------------------------------------------------------------------------------------------
-	ThreadManager* thrall = (((struct ContextBroker_connect_external_Python_ThreadArgPassing *)arg)->thrall);
-	PluginManager* plugman = (((struct ContextBroker_connect_external_Python_ThreadArgPassing *)arg)->plugman);
-	struct ShMemHeader *shmem_headers = (((struct ContextBroker_connect_external_Python_ThreadArgPassing *)arg)->shmem_headers);
-	DenKr_essentials_ThreadID ownID = (((struct ContextBroker_connect_external_Python_ThreadArgPassing *)arg)->ownID);
-	DenKr_essentials_ThreadID mainThreadID = (((struct ContextBroker_connect_external_Python_ThreadArgPassing *)arg)->mainThreadID);
-	DenKr_InfBroker_Iface_Client* InfBrokerIface = (DenKr_InfBroker_Iface_Client*)(((struct ContextBroker_connect_external_Python_ThreadArgPassing *)arg)->ContextBrokerInterface);
-	free(arg);
-	printfc(DENKR__COLOR_ANSI__THREAD_BASIC,"Thread started:");printf(" "STRINGIFY(C_PREF)" - Context-Broker Module to enable Runtime-Connection of external Python-Modules.\n");
+		//	ThreadManager* thrall = (((struct ContextBroker_connect_external_Python_ThreadArgPassing *)arg)->thrall);
+		//	PluginManager* plugman = (((struct ContextBroker_connect_external_Python_ThreadArgPassing *)arg)->plugman);
+		//	struct ShMemHeader *shmem_headers = (((struct ContextBroker_connect_external_Python_ThreadArgPassing *)arg)->shmem_headers);
+		//	DenKr_essentials_ThreadID ownID = (((struct ContextBroker_connect_external_Python_ThreadArgPassing *)arg)->ownID);
+		//	DenKr_essentials_ThreadID mainThreadID = (((struct ContextBroker_connect_external_Python_ThreadArgPassing *)arg)->mainThreadID);
+		//	DenKr_InfBroker_Iface_Client* InfBrokerIface = (DenKr_InfBroker_Iface_Client*)(((struct ContextBroker_connect_external_Python_ThreadArgPassing *)arg)->ContextBrokerInterface);
+		//	free(arg);
+	printfc(DENKR__COLOR_ANSI__THREAD_BASIC,"Thread started:");printf(" "STRINGIFY(C_PREF)" - Context-Broker Module to enable Runtime-Connection of external Python-Modules. (ThreadID #%d)\n",ownID);
 	int err;
 	#define shmem_recv_start_self ShMem_recv_start(&(shmem_headers[ownID]))
 	#define shmem_recv_finish_self ShMem_recv_finish(&(shmem_headers[ownID]))
@@ -550,13 +552,21 @@ void* CAT(hook_role_thread_,C_PREF)(void* arg)
     	role->idx=next_client_idx;
     //	printfc(yellow,"asdf:");printf("\n%s\n%d\n\n\n",role->RoleName,sizeof(*role));
 
-    	PluginManager_register_role_generic(plugman, (char*)role, sizeof(*role), DenKr_plugin_working_type__thread, NULL, DenKr_plugin_interComm_method__infBroker, CAT(C_PREF,_connect_translate__Thread));
+    	plugman->err=malloc(sizeof(PluginManager_err));
+    	PluginManager_register_role_generic(plugman, DenKr_plugin_role__generic, (char*)role, sizeof(*role), DenKr_plugin_working_type__thread, NULL, DenKr_plugin_interComm_method__infBroker, CAT(C_PREF,_connect_translate__Thread));
 
 //    	int i=0;
 		struct PluginRoleGeneric* plugin;
 		plugin=plugman->generic;
+    	//TODO: This could be reworked, using the plugman->err. Here we discover the location inside the generic linked list, where the newly registered generic plugin is located. Instead a slight adjustment in the generic register function could use the plugman->err to return the count. Then these checks can be omitted and we just circle the appropriate amount of times through the linked list. That would even be more failure-proof
 		//Yeah, you could check via 'i' if you run over the 'plugman->generic_c' Borders. But that anyhow could only result out of a Bug. So... who really cares. You would have to fix THAT primordial Bug at any rate... and not actually a Handling here...
-		while(((struct ContextBroker_connect_external_Python__Client_GenericPluginRole*)(plugin->role))->idx != next_client_idx){
+		while(
+			!(
+				((struct ContextBroker_connect_external_Python__Client_GenericPluginRole*)(plugin->role))->idx == next_client_idx &&
+				plugin->hook == CAT(C_PREF,_connect_translate__Thread) &&
+				strcmp(((struct ContextBroker_connect_external_Python__Client_GenericPluginRole*)(plugin->role))->RoleName,ContextBroker_connect_external_Python__Client_GenericPluginRole__Name) == 0//Might be not necessary
+			)
+		){
 			plugin=plugin->next;
 		}
 
@@ -564,6 +574,8 @@ void* CAT(hook_role_thread_,C_PREF)(void* arg)
 		*((int*)(temparg))=s;
 		DenKr_Thread_startThread_generic(thrall, plugin, mainThreadID, plugman, shmem_headers, (InfBrokerIface->hidden).send_to_Broker, temparg, sizeof(int));
 		free(temparg);
+		free(plugman->err);
+		plugman->err=NULL;
 
 //	    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //	    ShMem_send_start(&(shmem_headers[plugin->ThreadID]), sizeof(int), SHMEM_MSG_TYPE__GENERIC);
@@ -603,7 +615,7 @@ int CAT(DENKR_PLUGIN_DISC_INIT_FUNC_PREFIX,C_PREF)(PluginManager *plugman)
 
 	PluginManager_register_role_predefined(plugman, role, DenKr_plugin_working_type__thread, CAT(hook_role_thread_,C_PREF));
 
-	return role;
+	return 0;//return role;//This return isn't really used anymore. This is intrinsically done by registration-function
 }
 
 
